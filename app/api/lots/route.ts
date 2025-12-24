@@ -16,7 +16,7 @@ type Lot = {
 
 export async function GET(req: Request) {
   const session = await auth();
-  const accessToken = (session as any)?.accessToken as string | undefined;
+  const accessToken = (session as { accessToken?: string })?.accessToken;
   if (!accessToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { searchParams } = new URL(req.url);
@@ -41,7 +41,7 @@ export async function GET(req: Request) {
   const iBuyer = idx("Buyer");
   const iFolderUrl = idx("FolderURL");
 
-  let lots: Lot[] = values.slice(1).flatMap((row) => {
+  const lots: Lot[] = values.slice(1).flatMap((row) => {
     const lotId = iLot >= 0 ? String(row[iLot] || "").trim() : "";
     if (!lotId) return [];
 

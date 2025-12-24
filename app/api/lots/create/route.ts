@@ -7,7 +7,7 @@ const LOTS_TAB = "LOTS";
 
 export async function POST(req: Request) {
   const session = await auth();
-  const accessToken = (session as any)?.accessToken as string | undefined;
+  const accessToken = (session as { accessToken?: string })?.accessToken;
   if (!accessToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
   const nextRow = allRows.length + 1;
 
   // Build row data
-  const newRow: any[] = new Array(Math.max(iLot, iBin, iTitle, iStatus, iBuyer) + 1).fill("");
+  const newRow: (string | number)[] = new Array(Math.max(iLot, iBin, iTitle, iStatus, iBuyer) + 1).fill("");
   if (iLot >= 0) newRow[iLot] = lotId;
   if (iBin >= 0) newRow[iBin] = binId;
   if (iTitle >= 0 && title) newRow[iTitle] = title;

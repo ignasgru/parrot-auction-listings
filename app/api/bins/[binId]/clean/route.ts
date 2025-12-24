@@ -11,7 +11,7 @@ export async function POST(
   { params }: { params: Promise<{ binId: string }> }
 ) {
   const session = await auth();
-  const accessToken = (session as any)?.accessToken as string | undefined;
+  const accessToken = (session as { accessToken?: string })?.accessToken;
   if (!accessToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { binId } = await params;
@@ -37,7 +37,7 @@ export async function POST(
     }
 
     // Find rows that need to be updated (where BinID == binId)
-    const updates: { range: string; values: any[][] }[] = [];
+    const updates: { range: string; values: (string | number)[][] }[] = [];
     const binCol = String.fromCharCode(65 + iBin); // A=65, B=66, etc.
 
     for (let rowIdx = 1; rowIdx < lotsValues.length; rowIdx++) {

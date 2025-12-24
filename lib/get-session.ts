@@ -7,6 +7,6 @@ export async function getSession() {
 
 export async function getAccessToken() {
   const session = await getSession();
-  return (session as any)?.accessToken as string | undefined;
+  return (session as { accessToken?: string })?.accessToken;
 }
 

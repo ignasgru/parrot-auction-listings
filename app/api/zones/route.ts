@@ -7,11 +7,10 @@ const TAB_NAME = "ZONE_LAYOUT";
 
 export async function GET() {
   const session = await auth();
-  if (!session || !(session as any).accessToken) {
+  const accessToken = (session as { accessToken?: string })?.accessToken;
+  if (!accessToken) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-
-  const accessToken = (session as any).accessToken as string;
   const sheets = sheetsClient(accessToken);
 
   // Read entire ZONE_LAYOUT

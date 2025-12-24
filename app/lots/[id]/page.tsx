@@ -1,8 +1,8 @@
 import { Navigation } from "@/components/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowLeft, Package, Calendar, MapPin, Box } from "lucide-react";
+import { ArrowLeft, Package, Calendar, MapPin } from "lucide-react";
 
 interface LotPageProps {
   params: Promise<{ id: string }>;

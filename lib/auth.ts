@@ -39,8 +39,8 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       // expose access token to server routes
-      (session as any).accessToken = token.accessToken;
-      (session as any).refreshToken = token.refreshToken;
+      (session as { accessToken?: string; refreshToken?: string }).accessToken = token.accessToken as string | undefined;
+      (session as { accessToken?: string; refreshToken?: string }).refreshToken = token.refreshToken as string | undefined;
       return session;
     },
   },

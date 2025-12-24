@@ -7,7 +7,7 @@ const LOTS_TAB = "LOTS";
 
 export async function POST(req: Request) {
   const session = await auth();
-  const accessToken = (session as any)?.accessToken as string | undefined;
+  const accessToken = (session as { accessToken?: string })?.accessToken;
   if (!accessToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();

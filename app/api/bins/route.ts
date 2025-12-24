@@ -15,7 +15,7 @@ type Bin = {
 
 export async function GET() {
   const session = await auth();
-  const accessToken = (session as any)?.accessToken as string | undefined;
+  const accessToken = (session as { accessToken?: string })?.accessToken;
   if (!accessToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const sheets = sheetsClient(accessToken);
