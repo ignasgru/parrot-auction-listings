@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { sheetsClient } from "@/lib/google";
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID!;
@@ -14,15 +13,20 @@ type Bin = {
 };
 
 export async function GET() {
-  const session = await auth();
-  const accessToken = (session as { accessToken?: string })?.accessToken;
-  if (!accessToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    if (!SHEET_ID) {
+      return NextResponse.json({ bins: [] });
+    }
 
-  const sheets = sheetsClient(accessToken);
-  const resp = await sheets.spreadsheets.values.get({
-    spreadsheetId: SHEET_ID,
-    range: `${TAB}!A:Z`,
-  });
+    const sheets = sheetsClient();
+    if (!sheets) {
+      return NextResponse.json({ bins: [] });
+    }
+
+    const resp = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: `${TAB}!A:Z`,
+    });
 
   const values = resp.data.values || [];
   if (values.length < 2) return NextResponse.json({ bins: [] });
@@ -49,6 +53,11 @@ export async function GET() {
     }];
   });
 
-  return NextResponse.json({ bins });
+    return NextResponse.json({ bins });
+  } catch (error) {
+    console.error("Bins error:", error);
+    // Return empty bins if Google Sheets not available
+    return NextResponse.json({ bins: [] });
+  }
 }
 

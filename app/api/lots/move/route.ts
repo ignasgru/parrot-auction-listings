@@ -1,23 +1,26 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { sheetsClient } from "@/lib/google";
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID!;
 const LOTS_TAB = "LOTS";
 
 export async function POST(req: Request) {
-  const session = await auth();
-  const accessToken = (session as { accessToken?: string })?.accessToken;
-  if (!accessToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    if (!SHEET_ID) {
+      return NextResponse.json({ error: "Google Sheets not configured" }, { status: 400 });
+    }
 
-  const body = await req.json();
-  const { lotId, targetBinId } = body;
+    const body = await req.json();
+    const { lotId, targetBinId } = body;
 
-  if (!lotId || !targetBinId) {
-    return NextResponse.json({ error: "lotId and targetBinId are required" }, { status: 400 });
-  }
+    if (!lotId || !targetBinId) {
+      return NextResponse.json({ error: "lotId and targetBinId are required" }, { status: 400 });
+    }
 
-  const sheets = sheetsClient(accessToken);
+    const sheets = sheetsClient();
+    if (!sheets) {
+      return NextResponse.json({ error: "Google authentication not configured" }, { status: 400 });
+    }
 
   // Get all lots data
   const resp = await sheets.spreadsheets.values.get({
@@ -63,6 +66,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Lot not found" }, { status: 404 });
   }
 
-  return NextResponse.json({ success: true, lotId, targetBinId });
+    return NextResponse.json({ success: true, lotId, targetBinId });
+  } catch (error) {
+    console.error("Move lot error:", error);
+    return NextResponse.json({ error: "Failed to move lot" }, { status: 500 });
+  }
 }
 

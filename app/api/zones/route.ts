@@ -1,25 +1,33 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { sheetsClient } from "@/lib/google";
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID!;
 const TAB_NAME = "ZONE_LAYOUT";
 
 export async function GET() {
-  const session = await auth();
-  const accessToken = (session as { accessToken?: string })?.accessToken;
-  if (!accessToken) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const sheets = sheetsClient(accessToken);
+  try {
+    if (!SHEET_ID) {
+      return NextResponse.json({
+        warehouse: { w: 75, h: 50 },
+        zones: [],
+      });
+    }
 
-  // Read entire ZONE_LAYOUT
-  const range = `${TAB_NAME}!A:F`;
+    const sheets = sheetsClient();
+    if (!sheets) {
+      return NextResponse.json({
+        warehouse: { w: 75, h: 50 },
+        zones: [],
+      });
+    }
 
-  const resp = await sheets.spreadsheets.values.get({
-    spreadsheetId: SHEET_ID,
-    range,
-  });
+    // Read entire ZONE_LAYOUT
+    const range = `${TAB_NAME}!A:F`;
+
+    const resp = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range,
+    });
 
   const values = resp.data.values || [];
   if (values.length < 2) {
@@ -55,9 +63,17 @@ export async function GET() {
     return [{ zoneId, x, y, w, h }];
   });
 
-  return NextResponse.json({
-    warehouse: { w: 75, h: 50 },
-    zones,
-  });
+    return NextResponse.json({
+      warehouse: { w: 75, h: 50 },
+      zones,
+    });
+  } catch (error) {
+    console.error("Zones error:", error);
+    // Return default empty data if Google Sheets not available
+    return NextResponse.json({
+      warehouse: { w: 75, h: 50 },
+      zones: [],
+    });
+  }
 }
 

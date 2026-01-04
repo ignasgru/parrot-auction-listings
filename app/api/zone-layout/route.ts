@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { sheetsClient } from "@/lib/google";
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID!;
@@ -13,24 +12,30 @@ function num(v: unknown, fallback: number) {
 }
 
 export async function GET() {
-  const session = await auth();
-  const accessToken = (session as { accessToken?: string })?.accessToken;
-  if (!accessToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    // Check if Google Sheets is configured
+    if (!SHEET_ID) {
+      return NextResponse.json({ warehouse: { w: 75, h: 50 }, zones: [] });
+    }
 
-  const sheets = sheetsClient(accessToken);
-  const range = `${TAB}!A:F`;
+    const sheets = sheetsClient();
+    if (!sheets) {
+      return NextResponse.json({ warehouse: { w: 75, h: 50 }, zones: [] });
+    }
 
-  const resp = await sheets.spreadsheets.values.get({
-    spreadsheetId: SHEET_ID,
-    range,
-  });
+    const range = `${TAB}!A:F`;
+
+    const resp = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range,
+    });
 
   const values = resp.data.values || [];
   if (values.length < 2) {
     return NextResponse.json({ warehouse: { w: 75, h: 50 }, zones: [] });
   }
 
-  const header = values[0].map((h) => String(h || "").trim());
+  const header = values[0].map((h: unknown) => String(h || "").trim());
   const idx = (name: string) => header.indexOf(name);
 
   const iZone = idx("ZoneID");
@@ -40,7 +45,7 @@ export async function GET() {
   const iH = idx("Height");
   const iActive = idx("Active");
 
-  const zones: Zone[] = values.slice(1).flatMap((row) => {
+  const zones: Zone[] = values.slice(1).flatMap((row: unknown[]) => {
     const zoneId = iZone >= 0 ? String(row[iZone] || "").trim() : "";
     if (!zoneId) return [];
 
@@ -58,33 +63,43 @@ export async function GET() {
     }];
   });
 
-  return NextResponse.json({ warehouse: { w: 75, h: 50 }, zones });
+    return NextResponse.json({ warehouse: { w: 75, h: 50 }, zones });
+  } catch (error) {
+    console.error("Zone layout error:", error);
+    // Return default empty data if Google Sheets not available
+    return NextResponse.json({ warehouse: { w: 75, h: 50 }, zones: [] });
+  }
 }
 
 export async function POST(req: Request) {
-  const session = await auth();
-  const accessToken = (session as { accessToken?: string })?.accessToken;
-  if (!accessToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    // Check if Google Sheets is configured
+    if (!SHEET_ID) {
+      return NextResponse.json({ error: "Google Sheets not configured" }, { status: 400 });
+    }
 
-  const body = await req.json().catch(() => null) as { zones?: Zone[] } | null;
-  const zones = body?.zones ?? [];
-  if (!Array.isArray(zones)) return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    const body = await req.json().catch(() => null) as { zones?: Zone[] } | null;
+    const zones = body?.zones ?? [];
+    if (!Array.isArray(zones)) return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
 
-  // sanitize + clamp to warehouse bounds (75x50)
-  const W = 75, H = 50;
-  const clean = zones
-    .map(z => ({
-      zoneId: String(z.zoneId || "").trim(),
-      x: Math.max(0, Math.min(W, num(z.x, 0))),
-      y: Math.max(0, Math.min(H, num(z.y, 0))),
-      w: Math.max(1, Math.min(W, num(z.w, 10))),
-      h: Math.max(1, Math.min(H, num(z.h, 10))),
-      active: z.active !== false
-    }))
-    .filter(z => z.zoneId.length > 0)
-    .map(z => [z.zoneId, String(z.x), String(z.y), String(z.w), String(z.h), z.active ? "TRUE" : "FALSE"]);
+    // sanitize + clamp to warehouse bounds (75x50)
+    const W = 75, H = 50;
+    const clean = zones
+      .map(z => ({
+        zoneId: String(z.zoneId || "").trim(),
+        x: Math.max(0, Math.min(W, num(z.x, 0))),
+        y: Math.max(0, Math.min(H, num(z.y, 0))),
+        w: Math.max(1, Math.min(W, num(z.w, 10))),
+        h: Math.max(1, Math.min(H, num(z.h, 10))),
+        active: z.active !== false
+      }))
+      .filter(z => z.zoneId.length > 0)
+      .map(z => [z.zoneId, String(z.x), String(z.y), String(z.w), String(z.h), z.active ? "TRUE" : "FALSE"]);
 
-  const sheets = sheetsClient(accessToken);
+    const sheets = sheetsClient();
+    if (!sheets) {
+      return NextResponse.json({ error: "Google authentication not configured" }, { status: 400 });
+    }
 
   // 1) Ensure header exists
   await sheets.spreadsheets.values.update({
@@ -110,5 +125,9 @@ export async function POST(req: Request) {
     });
   }
 
-  return NextResponse.json({ ok: true, count: clean.length });
+    return NextResponse.json({ ok: true, count: clean.length });
+  } catch (error) {
+    console.error("Zone layout save error:", error);
+    return NextResponse.json({ error: "Failed to save zone layout" }, { status: 500 });
+  }
 }

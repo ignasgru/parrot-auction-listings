@@ -6,11 +6,13 @@ const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
 // drive.file = app can create/read files it created or user selected via picker.
 // If you want full Drive access (not recommended), use: https://www.googleapis.com/auth/drive
 
-export const authOptions: NextAuthOptions = {
-  providers: [
+// Only include Google provider if credentials are set
+const providers = [];
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  providers.push(
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       authorization: {
         params: {
           scope: [
@@ -24,9 +26,29 @@ export const authOptions: NextAuthOptions = {
           prompt: "consent",
         },
       },
-    }),
-  ],
+    })
+  );
+}
+
+// NextAuth requires at least one provider, so use a dummy one if none are configured
+// This prevents NextAuth from throwing errors
+if (providers.length === 0) {
+  providers.push(
+    GoogleProvider({
+      clientId: "dummy",
+      clientSecret: "dummy",
+    })
+  );
+}
+
+export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET || "dummy-secret-for-development",
+  providers,
   session: { strategy: "jwt" },
+  pages: {
+    signIn: "/", // Redirect sign-in attempts to home
+    error: "/", // Redirect errors to home instead of showing error page
+  },
   callbacks: {
     async jwt({ token, account }) {
       // First time login: store tokens
@@ -54,8 +76,14 @@ export const handlers = {
 };
 
 // Export auth function for use in API routes and server components
+// Returns null if no session (doesn't throw errors)
 export async function auth() {
-  const { getServerSession } = await import("next-auth");
-  return await getServerSession(authOptions);
+  try {
+    const { getServerSession } = await import("next-auth");
+    return await getServerSession(authOptions);
+  } catch {
+    // Return null if auth fails instead of throwing
+    return null;
+  }
 }
 

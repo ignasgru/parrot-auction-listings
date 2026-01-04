@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { sheetsClient } from "@/lib/google";
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID!;
@@ -15,18 +14,23 @@ type Lot = {
 };
 
 export async function GET(req: Request) {
-  const session = await auth();
-  const accessToken = (session as { accessToken?: string })?.accessToken;
-  if (!accessToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    if (!SHEET_ID) {
+      return NextResponse.json({ lots: [] });
+    }
 
-  const { searchParams } = new URL(req.url);
-  const binId = searchParams.get("bin") || searchParams.get("binId"); // support both for backward compatibility
+    const { searchParams } = new URL(req.url);
+    const binId = searchParams.get("bin") || searchParams.get("binId"); // support both for backward compatibility
 
-  const sheets = sheetsClient(accessToken);
-  const resp = await sheets.spreadsheets.values.get({
-    spreadsheetId: SHEET_ID,
-    range: `${TAB}!A:Z`,
-  });
+    const sheets = sheetsClient();
+    if (!sheets) {
+      return NextResponse.json({ lots: [] });
+    }
+
+    const resp = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: `${TAB}!A:Z`,
+    });
 
   const values = resp.data.values || [];
   if (values.length < 2) return NextResponse.json({ lots: [] });
@@ -63,6 +67,11 @@ export async function GET(req: Request) {
     }];
   });
 
-  return NextResponse.json({ lots });
+    return NextResponse.json({ lots });
+  } catch (error) {
+    console.error("Lots error:", error);
+    // Return empty lots if Google Sheets not available
+    return NextResponse.json({ lots: [] });
+  }
 }
 

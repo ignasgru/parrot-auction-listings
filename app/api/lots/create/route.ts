@@ -1,23 +1,26 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { sheetsClient } from "@/lib/google";
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID!;
 const LOTS_TAB = "LOTS";
 
 export async function POST(req: Request) {
-  const session = await auth();
-  const accessToken = (session as { accessToken?: string })?.accessToken;
-  if (!accessToken) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    if (!SHEET_ID) {
+      return NextResponse.json({ error: "Google Sheets not configured" }, { status: 400 });
+    }
 
-  const body = await req.json();
-  const { binId, lotId, title, status, buyer } = body;
+    const body = await req.json();
+    const { binId, lotId, title, status, buyer } = body;
 
-  if (!binId || !lotId) {
-    return NextResponse.json({ error: "binId and lotId are required" }, { status: 400 });
-  }
+    if (!binId || !lotId) {
+      return NextResponse.json({ error: "binId and lotId are required" }, { status: 400 });
+    }
 
-  const sheets = sheetsClient(accessToken);
+    const sheets = sheetsClient();
+    if (!sheets) {
+      return NextResponse.json({ error: "Google authentication not configured" }, { status: 400 });
+    }
 
   // Get header row to find column indices
   const resp = await sheets.spreadsheets.values.get({
@@ -68,6 +71,10 @@ export async function POST(req: Request) {
   // TODO: Create Drive folder and QR code (later)
   // For now, just return success
 
-  return NextResponse.json({ success: true, lotId, binId });
+    return NextResponse.json({ success: true, lotId, binId });
+  } catch (error) {
+    console.error("Create lot error:", error);
+    return NextResponse.json({ error: "Failed to create lot" }, { status: 500 });
+  }
 }
 
