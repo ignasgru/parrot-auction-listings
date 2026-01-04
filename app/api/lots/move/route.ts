@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "No lots found" }, { status: 404 });
   }
 
-  const header = values[0].map((h) => String(h || "").trim());
+  const header = values[0].map((h: unknown) => String(h || "").trim());
   const iLot = header.indexOf("LotID");
   const iBin = header.indexOf("BinID");
 

@@ -35,7 +35,7 @@ export async function GET(req: Request) {
   const values = resp.data.values || [];
   if (values.length < 2) return NextResponse.json({ lots: [] });
 
-  const header = values[0].map((h) => String(h || "").trim());
+  const header = values[0].map((h: unknown) => String(h || "").trim());
   const idx = (name: string) => header.indexOf(name);
 
   const iLot = idx("LotID");

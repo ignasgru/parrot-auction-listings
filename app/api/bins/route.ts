@@ -31,7 +31,7 @@ export async function GET() {
   const values = resp.data.values || [];
   if (values.length < 2) return NextResponse.json({ bins: [] });
 
-  const header = values[0].map((h) => String(h || "").trim());
+  const header = values[0].map((h: unknown) => String(h || "").trim());
   const idx = (name: string) => header.indexOf(name);
 
   const iBin = idx("BinID");

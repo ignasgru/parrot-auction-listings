@@ -37,7 +37,7 @@ export async function GET() {
     });
   }
 
-  const header = values[0].map((h) => String(h || "").trim());
+  const header = values[0].map((h: unknown) => String(h || "").trim());
   const idx = (name: string) => header.indexOf(name);
 
   const iZone = idx("ZoneID");

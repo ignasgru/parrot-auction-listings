@@ -31,7 +31,7 @@ export async function POST(
   
   let cleaned = 0;
   if (lotsValues.length >= 2) {
-    const header = lotsValues[0].map((h) => String(h || "").trim());
+    const header = lotsValues[0].map((h: unknown) => String(h || "").trim());
     const iLot = header.indexOf("LotID");
     const iBin = header.indexOf("BinID");
 
@@ -77,7 +77,7 @@ export async function POST(
 
   const binsValues = binsResp.data.values || [];
   if (binsValues.length >= 2) {
-    const binsHeader = binsValues[0].map((h) => String(h || "").trim());
+      const binsHeader = binsValues[0].map((h: unknown) => String(h || "").trim());
     const iBinId = binsHeader.indexOf("BinID");
     const iStatus = binsHeader.indexOf("Status");
 
