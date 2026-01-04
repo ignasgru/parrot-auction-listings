@@ -10,8 +10,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Prevent hydration mismatch by only rendering SessionProvider after mount
+  // This is a valid use case for useEffect + setState
   if (!mounted) {
-    return <>{children}</>;
+    return <div suppressHydrationWarning>{children}</div>;
   }
 
   return <SessionProvider>{children}</SessionProvider>;
