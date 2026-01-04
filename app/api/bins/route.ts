@@ -40,7 +40,7 @@ export async function GET() {
   const iPos = idx("Position");
   const iSize = idx("Size");
 
-  const bins: Bin[] = values.slice(1).flatMap((row) => {
+  const bins: Bin[] = values.slice(1).flatMap((row: unknown[]) => {
     const binId = iBin >= 0 ? String(row[iBin] || "").trim() : "";
     const zone = iZone >= 0 ? String(row[iZone] || "").trim() : "";
     if (!binId || !zone) return [];

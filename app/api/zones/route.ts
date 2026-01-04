@@ -47,7 +47,7 @@ export async function GET() {
   const iH = idx("Height");
   const iActive = idx("Active");
 
-  const zones = values.slice(1).flatMap((row) => {
+  const zones = values.slice(1).flatMap((row: unknown[]) => {
     const zoneId = iZone >= 0 ? String(row[iZone] || "").trim() : "";
     if (!zoneId) return [];
 

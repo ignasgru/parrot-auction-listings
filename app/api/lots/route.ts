@@ -45,7 +45,7 @@ export async function GET(req: Request) {
   const iBuyer = idx("Buyer");
   const iFolderUrl = idx("FolderURL");
 
-  const lots: Lot[] = values.slice(1).flatMap((row) => {
+  const lots: Lot[] = values.slice(1).flatMap((row: unknown[]) => {
     const lotId = iLot >= 0 ? String(row[iLot] || "").trim() : "";
     if (!lotId) return [];
 
