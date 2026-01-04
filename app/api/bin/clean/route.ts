@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 import { sheetsClient } from "@/lib/google";
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID!;
@@ -6,6 +7,12 @@ const LOTS_TAB = "LOTS";
 const BINS_TAB = "BINS";
 
 export async function POST(req: Request) {
+  const session = await auth();
+  const accessToken = (session as { accessToken?: string })?.accessToken;
+  if (!accessToken) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     if (!SHEET_ID) {
       return NextResponse.json({ error: "Google Sheets not configured" }, { status: 400 });
@@ -19,10 +26,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "binId is required" }, { status: 400 });
     }
 
-    const sheets = sheetsClient();
-    if (!sheets) {
-      return NextResponse.json({ error: "Google authentication not configured" }, { status: 400 });
-    }
+    const sheets = sheetsClient(accessToken);
 
   // Get all lots data
   const lotsResp = await sheets.spreadsheets.values.get({

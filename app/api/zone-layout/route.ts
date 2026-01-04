@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 import { sheetsClient } from "@/lib/google";
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID!;
@@ -12,16 +13,18 @@ function num(v: unknown, fallback: number) {
 }
 
 export async function GET() {
+  const session = await auth();
+  const accessToken = (session as { accessToken?: string })?.accessToken;
+  if (!accessToken) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
-    // Check if Google Sheets is configured
     if (!SHEET_ID) {
       return NextResponse.json({ warehouse: { w: 75, h: 50 }, zones: [] });
     }
 
-    const sheets = sheetsClient();
-    if (!sheets) {
-      return NextResponse.json({ warehouse: { w: 75, h: 50 }, zones: [] });
-    }
+    const sheets = sheetsClient(accessToken);
 
     const range = `${TAB}!A:F`;
 
@@ -72,8 +75,13 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const session = await auth();
+  const accessToken = (session as { accessToken?: string })?.accessToken;
+  if (!accessToken) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
-    // Check if Google Sheets is configured
     if (!SHEET_ID) {
       return NextResponse.json({ error: "Google Sheets not configured" }, { status: 400 });
     }
@@ -96,10 +104,7 @@ export async function POST(req: Request) {
       .filter(z => z.zoneId.length > 0)
       .map(z => [z.zoneId, String(z.x), String(z.y), String(z.w), String(z.h), z.active ? "TRUE" : "FALSE"]);
 
-    const sheets = sheetsClient();
-    if (!sheets) {
-      return NextResponse.json({ error: "Google authentication not configured" }, { status: 400 });
-    }
+    const sheets = sheetsClient(accessToken);
 
   // 1) Ensure header exists
   await sheets.spreadsheets.values.update({
