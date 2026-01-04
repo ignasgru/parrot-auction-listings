@@ -76,14 +76,9 @@ export const handlers = {
 };
 
 // Export auth function for use in API routes and server components
-// Returns null if no session (doesn't throw errors)
+// Per spec: API routes must enforce auth
 export async function auth() {
-  try {
-    const { getServerSession } = await import("next-auth");
-    return await getServerSession(authOptions);
-  } catch {
-    // Return null if auth fails instead of throwing
-    return null;
-  }
+  const { getServerSession } = await import("next-auth");
+  return await getServerSession(authOptions);
 }
 

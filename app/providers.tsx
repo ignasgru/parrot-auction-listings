@@ -1,7 +1,6 @@
 "use client";
+import { SessionProvider } from "next-auth/react";
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  // No authentication needed - just return children directly
-  // Suppress hydration warning to prevent Next.js metadata hydration issues
-  return <div suppressHydrationWarning>{children}</div>;
+  return <SessionProvider>{children}</SessionProvider>;
 }
