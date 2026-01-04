@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 import { sheetsClient } from "@/lib/google";
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID!;
@@ -13,12 +14,18 @@ type Bin = {
 };
 
 export async function GET() {
+  const session = await auth();
+  const accessToken = (session as { accessToken?: string })?.accessToken;
+  if (!accessToken) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     if (!SHEET_ID) {
       return NextResponse.json({ bins: [] });
     }
 
-    const sheets = sheetsClient();
+    const sheets = sheetsClient(accessToken);
     if (!sheets) {
       return NextResponse.json({ bins: [] });
     }
