@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Stage, Layer, Rect, Text, Line, Transformer } from "react-konva";
 import type Konva from "konva";
+import { Navigation } from "@/components/navigation";
 
 type Zone = { zoneId: string; x: number; y: number; w: number; h: number; active?: boolean };
 type MapData = { warehouse: { w: number; h: number }; zones: Zone[] };
@@ -184,7 +185,8 @@ export default function MapPage() {
   const selectedZone = data?.zones.find((z) => z.zoneId === selected) || null;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
+      <Navigation />
       <div className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b">
         <div className="mx-auto max-w-6xl px-4 py-3 flex items-center gap-3">
           <div className="font-black tracking-[0.18em] text-xs text-slate-500 uppercase">
