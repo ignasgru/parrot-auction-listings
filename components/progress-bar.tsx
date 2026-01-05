@@ -9,7 +9,7 @@ export function ProgressBar({ value, max = 100, className = "" }: ProgressBarPro
   
   return (
     <div className={`w-full bg-muted rounded-full h-2 ${className}`}>
-      {/* Inline style is required for dynamic width in progress bars */}
+      {/* Inline style is necessary for dynamic progress bar width - this is standard practice for progress bars */}
       <div
         className="bg-primary h-2 rounded-full transition-all"
         style={{ width: `${percentage}%` }}
