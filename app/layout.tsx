@@ -1,6 +1,5 @@
 import "./globals.css";
 import { Providers } from "./providers";
-import { AuthWrapper } from "@/components/auth-wrapper";
 
 export const metadata = {
   title: "Parrot Ops - Warehouse Operations",
@@ -12,7 +11,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <Providers>
-          <AuthWrapper>{children}</AuthWrapper>
+          {children}
         </Providers>
       </body>
     </html>

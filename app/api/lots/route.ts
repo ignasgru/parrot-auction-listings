@@ -15,11 +15,9 @@ type Lot = {
 };
 
 export async function GET(req: Request) {
+  // Auth temporarily disabled - app works without login
   const session = await auth();
   const accessToken = (session as { accessToken?: string })?.accessToken;
-  if (!accessToken) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
 
   try {
     if (!SHEET_ID) {

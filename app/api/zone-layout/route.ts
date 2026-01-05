@@ -13,11 +13,9 @@ function num(v: unknown, fallback: number) {
 }
 
 export async function GET() {
+  // Auth temporarily disabled - app works without login
   const session = await auth();
   const accessToken = (session as { accessToken?: string })?.accessToken;
-  if (!accessToken) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
 
   try {
     if (!SHEET_ID) {
@@ -75,11 +73,9 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  // Auth temporarily disabled - app works without login
   const session = await auth();
   const accessToken = (session as { accessToken?: string })?.accessToken;
-  if (!accessToken) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
 
   try {
     if (!SHEET_ID) {
