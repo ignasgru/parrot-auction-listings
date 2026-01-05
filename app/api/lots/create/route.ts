@@ -23,6 +23,9 @@ export async function POST(req: Request) {
     }
 
     const sheets = sheetsClient(accessToken);
+    if (!sheets) {
+      return NextResponse.json({ error: "Google Sheets not available" }, { status: 500 });
+    }
 
   // Get header row to find column indices
   const resp = await sheets.spreadsheets.values.get({

@@ -22,6 +22,9 @@ export async function POST(
     const { binId } = await params;
 
     const sheets = sheetsClient(accessToken);
+    if (!sheets) {
+      return NextResponse.json({ error: "Google Sheets not available" }, { status: 500 });
+    }
 
   // Get all lots data
   const lotsResp = await sheets.spreadsheets.values.get({

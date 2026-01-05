@@ -19,6 +19,12 @@ export async function GET() {
     }
 
     const sheets = sheetsClient(accessToken);
+    if (!sheets) {
+      return NextResponse.json({
+        warehouse: { w: 75, h: 50 },
+        zones: [],
+      });
+    }
 
     // Read entire ZONE_LAYOUT
     const range = `${TAB_NAME}!A:F`;

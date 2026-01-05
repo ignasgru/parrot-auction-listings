@@ -67,12 +67,14 @@ Your app is using **dummy credentials** because environment variables are **NOT 
    - Go to: <https://console.cloud.google.com/apis/credentials>
    - Click your OAuth 2.0 Client ID
    - Under **Authorized redirect URIs**, add:
-     ```
-     https://parrot-auction-listings-ignas-s-projects.vercel.app/api/auth/callback/google
-     ```
-   - Click **SAVE**
 
-8. **Test**
+```text
+https://parrot-auction-listings-ignas-s-projects.vercel.app/api/auth/callback/google
+```
+
+- Click **SAVE**
+
+1. **Test**
    - Visit: <https://parrot-auction-listings-ignas-s-projects.vercel.app>
    - You should see "Sign in with Google" button
    - Click it and sign in
@@ -80,11 +82,13 @@ Your app is using **dummy credentials** because environment variables are **NOT 
 ## Why This Is Required
 
 Without environment variables in Vercel:
+
 - The app uses `clientId: "dummy"` and `clientSecret: "dummy"`
 - Google rejects these credentials → `invalid_client` error
 - The app cannot authenticate users
 
 With environment variables set:
+
 - The app uses real Google OAuth credentials
 - Authentication works correctly
 - Users can sign in
@@ -111,4 +115,3 @@ If you've set all variables and it's still not working:
 3. **Check the redirect URI** - Must match exactly (no trailing slash)
 4. **Wait a few minutes** - Changes can take time to propagate
 5. **Check Vercel logs** - Go to your project → Logs tab for errors
-

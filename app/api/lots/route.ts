@@ -28,6 +28,9 @@ export async function GET(req: Request) {
     const binId = searchParams.get("bin") || searchParams.get("binId"); // support both for backward compatibility
 
     const sheets = sheetsClient(accessToken);
+    if (!sheets) {
+      return NextResponse.json({ lots: [] });
+    }
 
     const resp = await sheets.spreadsheets.values.get({
       spreadsheetId: SHEET_ID,

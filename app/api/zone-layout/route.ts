@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { sheetsClient } from "@/lib/google";
 
-const SHEET_ID = process.env.GOOGLE_SHEET_ID!;
+const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 const TAB = "ZONE_LAYOUT";
 
 type Zone = { zoneId: string; x: number; y: number; w: number; h: number; active?: boolean };
@@ -22,12 +22,16 @@ export async function GET() {
       return NextResponse.json({ warehouse: { w: 75, h: 50 }, zones: [] });
     }
 
+    const sheetId = SHEET_ID as string; // Type assertion after null check
     const sheets = sheetsClient(accessToken);
+    if (!sheets) {
+      return NextResponse.json({ warehouse: { w: 75, h: 50 }, zones: [] });
+    }
 
     const range = `${TAB}!A:F`;
 
     const resp = await sheets.spreadsheets.values.get({
-      spreadsheetId: SHEET_ID,
+      spreadsheetId: sheetId,
       range,
     });
 
@@ -82,6 +86,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Google Sheets not configured" }, { status: 400 });
     }
 
+    const sheetId = SHEET_ID as string; // Type assertion after null check
     const body = await req.json().catch(() => null) as { zones?: Zone[] } | null;
     const zones = body?.zones ?? [];
     if (!Array.isArray(zones)) return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
@@ -101,10 +106,13 @@ export async function POST(req: Request) {
       .map(z => [z.zoneId, String(z.x), String(z.y), String(z.w), String(z.h), z.active ? "TRUE" : "FALSE"]);
 
     const sheets = sheetsClient(accessToken);
+    if (!sheets) {
+      return NextResponse.json({ error: "Google Sheets not available" }, { status: 500 });
+    }
 
   // 1) Ensure header exists
   await sheets.spreadsheets.values.update({
-    spreadsheetId: SHEET_ID,
+    spreadsheetId: sheetId,
     range: `${TAB}!A1:F1`,
     valueInputOption: "RAW",
     requestBody: { values: [["ZoneID", "X", "Y", "Width", "Height", "Active"]] },
@@ -112,14 +120,14 @@ export async function POST(req: Request) {
 
   // 2) Clear existing rows A2:F
   await sheets.spreadsheets.values.clear({
-    spreadsheetId: SHEET_ID,
+    spreadsheetId: sheetId,
     range: `${TAB}!A2:F`,
   });
 
   // 3) Write new rows
   if (clean.length > 0) {
     await sheets.spreadsheets.values.update({
-      spreadsheetId: SHEET_ID,
+      spreadsheetId: sheetId,
       range: `${TAB}!A2:F${clean.length + 1}`,
       valueInputOption: "RAW",
       requestBody: { values: clean },
